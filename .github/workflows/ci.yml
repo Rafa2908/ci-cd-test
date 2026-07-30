@@ -33,15 +33,10 @@ jobs:
       - name: Run tests
         run: npm test
 
-      - name: Debug context
-        run: |
-          echo "event_name: ${{ github.event_name }}"
-          echo "ref: ${{ github.ref }}"
-
   build-and-push:
     needs: test
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main' && github.event == 'push'
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
 
     steps:
       - name: Checkout code
