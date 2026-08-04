@@ -1,0 +1,50 @@
+name: CI Development
+
+on:
+  push:
+    branches: [develop]
+  pull_request:
+    branches: [develop]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: test_db
+        ports:
+          - "5432:5432"
+        options: >-
+          --health-cmd="pg_isready -U postgres -d test_db"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Setup Node.js 20.x
+        uses: actions/setup-node@v5
+        with:
+          node-version: "20"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run lint-check
+        run: npm run lint
+
+      - name: Run tests
+        run: npm test
+        env:
+          TEST_PG_USER: postgres
+          TEST_PG_HOST: localhost
+          TEST_PG_PASSWORD: postgres
+          TEST_PG_DB: test_db
+          TEST_PG_PORT: 5432
