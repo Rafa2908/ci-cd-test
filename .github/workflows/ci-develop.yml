@@ -1,23 +1,18 @@
-name: CI
+name: CI Development
 
 on:
   push:
-    branches: [main]
+    branches: [develop]
   pull_request:
-    branches: [main]
+    branches: [develop]
 
 jobs:
   test:
     runs-on: ubuntu-latest
 
-    strategy:
-      matrix:
-        node-version: [20.x, 22.x]
-
     services:
       postgres:
         image: postgres:16
-
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
@@ -34,16 +29,15 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v5
 
-      - name: Set up Node.js ${{ matrix.node-version}}
+      - name: Setup Node.js 20.x
         uses: actions/setup-node@v5
         with:
-          node-version: ${{matrix.node-version}}
-          cache: "npm"
+          node-version: "20"
 
       - name: Install dependencies
         run: npm ci
 
-      - name: Run linter
+      - name: Run lint-check
         run: npm run lint
 
       - name: Run tests
@@ -54,25 +48,3 @@ jobs:
           TEST_PG_PASSWORD: postgres
           TEST_PG_DB: test_db
           TEST_PG_PORT: 5432
-
-  build-and-push:
-    needs: test
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v5
-
-      - name: Log in to Docker hub
-        uses: docker/login-action@v3
-        with:
-          username: ${{secrets.DOCKERHUB_USERNAME}}
-          password: ${{secrets.DOCKERHUB_TOKEN}}
-
-      - name: Build and push image
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          push: true
-          tags: ${{secrets.DOCKERHUB_USERNAME}}/ci-cd-demo:latest
