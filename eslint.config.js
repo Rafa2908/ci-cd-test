@@ -11,6 +11,9 @@ export default [
         console: "readonly",
       },
     },
+    rules: {
+      "no-unused-vars": ["error", { argsIgnorePattern: "^_" }],
+    },
   },
   {
     files: ["**/*.test.js"],

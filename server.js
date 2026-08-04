@@ -9,7 +9,7 @@ app.use(express.json());
 app.use("/api/task", taskRouter);
 app.use(errorHandler);
 
-const port = 8000;
+const port = process.env.PORT;
 
 if (process.env.NODE_ENV !== "test") {
   app.listen(port, () => {

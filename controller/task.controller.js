@@ -1,22 +1,26 @@
-export const tasks = [];
+import { pool } from "../config/database.js";
 
 export const addTask = async (req, res, next) => {
-  const { id, title, completed } = req.body;
+  const { title } = req.body;
 
   try {
-    if (!id || !title || completed === undefined) {
+    if (!title) {
       return res.status(400).json({ message: "No data provided" });
     }
 
-    const newTask = {
-      id,
-      title,
-      completed: completed,
-    };
+    const newTask = await pool.query(
+      `
+      INSERT INTO tasks(title)
+      VALUES($1)
+      `,
+      [title],
+    );
 
-    tasks.push(newTask);
+    if (newTask.rowCount === 0) {
+      return res.status(400).json({ message: "Error adding new task" });
+    }
 
-    return res.status(201).json({ message: "New task added", task: newTask });
+    return res.status(201).json({ message: "New task added" });
   } catch (error) {
     return next(error);
   }
@@ -24,10 +28,15 @@ export const addTask = async (req, res, next) => {
 
 export const getTasks = async (req, res, next) => {
   try {
-    if (tasks.length === 0) {
-      return res.status(200).json({ tasks: [] });
+    const tasks = await pool.query(`
+      SELECT id, title, completed FROM tasks
+      `);
+
+    if (tasks.rowCount === 0) {
+      return res.status(200).json({ message: "No tasks available", tasks: [] });
     }
-    return res.status(200).json({ tasks: tasks });
+
+    return res.status(200).json({ tasks: tasks.rows });
   } catch (error) {
     return next(error);
   }
@@ -37,17 +46,28 @@ export const getTaskById = async (req, res, next) => {
   const { id } = req.params;
 
   try {
-    if (!id) {
+    if (!id || id.trim() === "") {
       return res.status(400).json({ message: "Invalid data provided" });
     }
 
-    const task = tasks.find((t) => t.id === id);
-
-    if (!task) {
-      return res.status(404).json({ message: "No task found" });
+    if (isNaN(id)) {
+      return res.status(400).json({ message: "Invalid data provided" });
     }
 
-    return res.status(200).json(task);
+    const task = await pool.query(
+      `
+      SELECT id, title, completed
+      FROM tasks
+      WHERE id=$1
+      `,
+      [id],
+    );
+
+    if (task.rowCount === 0) {
+      return res.status(404).json({ message: "Task not found" });
+    }
+
+    return res.status(200).json({ task: task.rows[0] });
   } catch (error) {
     return next(error);
   }
@@ -56,58 +76,61 @@ export const getTaskById = async (req, res, next) => {
 export const getTasksCompleted = async (req, res, next) => {
   const { completed } = req.query;
   try {
-    if (completed !== "true") {
-      return res.status(404).json({ message: "No task completed found" });
+    const task = await pool.query(
+      `
+      SELECT title
+      FROM tasks
+      WHERE completed=$1
+      `,
+      [completed],
+    );
+
+    if (task.rowCount === 0) {
+      return res.status(404).json({ message: "Tasks not found" });
     }
 
-    const taskCompleted = tasks.filter((t) => t.completed === true);
-
-    if (taskCompleted.length === 0) {
-      return res.status(404).json({ message: "No task completed found" });
-    }
-
-    return res.status(200).json({ tasks: taskCompleted });
+    return res.status(200).json({ tasks: task.rows[0] });
   } catch (error) {
     return next(error);
   }
 };
 
-export const updateTaskById = async (req, res, next) => {
-  const { id } = req.params;
+// export const updateTaskById = async (req, res, next) => {
+//   const { id } = req.params;
 
-  try {
-    const task = tasks.find((t) => t.id === id);
+//   try {
+//     const task = tasks.find((t) => t.id === id);
 
-    if (!task) {
-      return res.status(404).json({ message: "No task found" });
-    }
+//     if (!task) {
+//       return res.status(404).json({ message: "No task found" });
+//     }
 
-    if (task.completed === true) {
-      task.completed = false;
-    } else {
-      task.completed = true;
-    }
+//     if (task.completed === true) {
+//       task.completed = false;
+//     } else {
+//       task.completed = true;
+//     }
 
-    return res.status(200).json({ message: "Task updated" });
-  } catch (error) {
-    return next(error);
-  }
-};
+//     return res.status(200).json({ message: "Task updated" });
+//   } catch (error) {
+//     return next(error);
+//   }
+// };
 
-export const deleteTaskById = async (req, res, next) => {
-  const { id } = req.params;
+// export const deleteTaskById = async (req, res, next) => {
+//   const { id } = req.params;
 
-  try {
-    const i = tasks.findIndex((t) => t.id === id);
+//   try {
+//     const i = tasks.findIndex((t) => t.id === id);
 
-    if (i === -1) {
-      return res.status(404).json({ message: "No task found" });
-    }
+//     if (i === -1) {
+//       return res.status(404).json({ message: "No task found" });
+//     }
 
-    tasks.splice(i, 1);
+//     tasks.splice(i, 1);
 
-    return res.status(204).send();
-  } catch (error) {
-    return next(error);
-  }
-};
+//     return res.status(204).send();
+//   } catch (error) {
+//     return next(error);
+//   }
+// };
