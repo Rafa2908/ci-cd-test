@@ -2,7 +2,7 @@ import "dotenv/config";
 import pkg from "pg";
 const { Pool } = pkg;
 
-const isTest = process.env.NODE_ENV !== "test";
+const isTest = process.env.NODE_ENV === "test";
 
 export const pool = new Pool({
   user: isTest ? process.env.TEST_PG_USER : process.env.PG_USER,
