@@ -95,42 +95,89 @@ export const getTasksCompleted = async (req, res, next) => {
   }
 };
 
-// export const updateTaskById = async (req, res, next) => {
-//   const { id } = req.params;
+export const updateTaskStatus = async (req, res, next) => {
+  const { id } = req.params;
+  try {
+    if (isNaN(id)) {
+      return res.status(400).json({ message: "Invalid data provided" });
+    }
 
-//   try {
-//     const task = tasks.find((t) => t.id === id);
+    const update = await pool.query(
+      `
+      UPDATE tasks
+      SET completed = NOT completed
+      WHERE id=$1
+      RETURNING id
+      `,
+      [id],
+    );
 
-//     if (!task) {
-//       return res.status(404).json({ message: "No task found" });
-//     }
+    if (update.rowCount === 0) {
+      return res.status(404).json({ message: "No task found to complete" });
+    }
 
-//     if (task.completed === true) {
-//       task.completed = false;
-//     } else {
-//       task.completed = true;
-//     }
+    return res.status(200).json({ message: "Task completed" });
+  } catch (error) {
+    return next(error);
+  }
+};
 
-//     return res.status(200).json({ message: "Task updated" });
-//   } catch (error) {
-//     return next(error);
-//   }
-// };
+export const updateTaskTitle = async (req, res, next) => {
+  const { id } = req.params;
+  const { title } = req.body;
 
-// export const deleteTaskById = async (req, res, next) => {
-//   const { id } = req.params;
+  try {
+    if (isNaN(id)) {
+      return res.status(400).json({ message: "Invalid data provided" });
+    }
 
-//   try {
-//     const i = tasks.findIndex((t) => t.id === id);
+    if (!title) {
+      return res.status(400).json({ message: "No data provided" });
+    }
 
-//     if (i === -1) {
-//       return res.status(404).json({ message: "No task found" });
-//     }
+    const update = await pool.query(
+      `
+      UPDATE tasks
+      SET title=$1
+      WHERE id=$2
+      RETURNING id
+      `,
+      [title, id],
+    );
 
-//     tasks.splice(i, 1);
+    if (update.rowCount === 0) {
+      return res.status(404).json({ message: "No task found to update" });
+    }
 
-//     return res.status(204).send();
-//   } catch (error) {
-//     return next(error);
-//   }
-// };
+    return res.status(200).json({ message: "Task updated" });
+  } catch (error) {
+    return next(error);
+  }
+};
+
+export const deleteTaskById = async (req, res, next) => {
+  const { id } = req.params;
+
+  try {
+    if (isNaN(id)) {
+      return res.status(400).json({ message: "Invalid data provided" });
+    }
+
+    const deleteTask = await pool.query(
+      `
+      DELETE FROM tasks
+      WHERE id=$1
+      RETURNING id
+      `,
+      [id],
+    );
+
+    if (deleteTask.rowCount === 0) {
+      return res.status(404).json({ message: "No task found to delete" });
+    }
+
+    return res.status(200).json({ message: "Task deleted" });
+  } catch (error) {
+    return next(error);
+  }
+};
