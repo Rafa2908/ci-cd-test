@@ -32,7 +32,6 @@ describe("POST /api/task/add", () => {
     expect(res.statusCode).toBe(201);
     expect(res.body.message).toBe("New task added");
 
-    // optional: verify it actually landed in the DB
     const dbCheck = await pool.query(
       `
       SELECT id FROM tasks
@@ -40,7 +39,6 @@ describe("POST /api/task/add", () => {
       `,
       ["Learn Jest"],
     );
-    console.log(dbCheck.rows[0]);
 
     expect(dbCheck.rowCount).toBe(1);
   });
@@ -96,15 +94,6 @@ describe("GET /api/task/:id", () => {
     expect(res.statusCode).toBe(404);
     expect(res.body.message).toBe("Task not found");
   });
-
-  // it("Update task and returns 200 success status", async () => {
-  //   await request(app).post("/api/task/add").send({ title: "Learn Jest" });
-
-  //   const res = await request(app).put("/api/task/1");
-
-  //   expect(res.statusCode).toBe(200);
-  //   expect(res.body.message).toBe("Task completed");
-  // });
 });
 
 describe("GET /api/task/search?completed=true", () => {
@@ -117,154 +106,120 @@ describe("GET /api/task/search?completed=true", () => {
   });
 });
 
-// describe("GET /api/task/tasks", () => {
-//   it("Returns empty array and 404 status code", async () => {
-//     const res = await request(app).get("/api/task/tasks");
-//     expect(res.body.tasks).toEqual([]);
-//     expect(res.statusCode).toBe(200);
-//   });
+describe("PUT /api/task/:id/title", () => {
+  it("Update task and returns 200 success status", async () => {
+    await request(app).post("/api/task/add").send({ title: "Learn Jest" });
 
-//   it("Returns tasks array and success 200", async () => {
-//     await request(app).post("/api/task/add").send({
-//       id: "123",
-//       title: "Learn Jest",
-//       completed: false,
-//     });
-//     await request(app).post("/api/task/add").send({
-//       id: "124",
-//       title: "Learn CI/CD",
-//       completed: false,
-//     });
+    const res = await request(app)
+      .put("/api/task/1/title")
+      .send({ title: "Learn CI/CD" });
 
-//     const res = await request(app).get("/api/task/tasks");
-//     expect(res.body.tasks.length).toBe(2);
-//     expect(res.statusCode).toBe(200);
-//   });
-// });
+    expect(res.statusCode).toBe(200);
+    expect(res.body.message).toBe("Task updated");
+  });
 
-// describe("GET /api/task/:id", () => {
-//   it("Returns the matching task and success 200", async () => {
-//     await request(app).post("/api/task/add").send({
-//       id: "123",
-//       title: "Learn Jest",
-//       completed: false,
-//     });
+  it("Returns 400 status on invalid id", async () => {
+    const res = await request(app)
+      .put("/api/task/abc/title")
+      .send({ title: "Learn CI" });
 
-//     const res = await request(app).get("/api/task/123");
-//     expect(res.statusCode).toBe(200);
-//     expect(res.body).toEqual({
-//       id: "123",
-//       title: "Learn Jest",
-//       completed: false,
-//     });
-//   });
+    expect(res.statusCode).toBe(400);
+    expect(res.body.message).toBe("Invalid data provided");
+  });
 
-//   it("Returns 404 for an unknown id", async () => {
-//     const res = await request(app).get("/api/task/doesnotexist");
-//     expect(res.statusCode).toBe(404);
-//     expect(res.body.message).toBe("No task found");
-//   });
-// });
+  it("Returns 400 status on empty title body ", async () => {
+    const res = await request(app).put("/api/task/1/title").send({ title: "" });
 
-// describe("POST /api/task/add", () => {
-//   it("No data provided", async () => {
-//     const res = await request(app).post("/api/task/add").send({
-//       id: "",
-//       title: "",
-//       completed: undefined,
-//     });
-//     expect(res.body.message).toBe("No data provided");
-//     expect(res.statusCode).toBe(400);
-//   });
+    expect(res.statusCode).toBe(400);
+    expect(res.body.message).toBe("No data provided");
+  });
 
-//   it("Adding new task", async () => {
-//     const res = await request(app).post("/api/task/add").send({
-//       id: "123",
-//       title: "Learning Jest",
-//       completed: false,
-//     });
-//     expect(res.statusCode).toBe(201);
-//     expect(res.body.message).toBe("New task added");
-//     expect(res.body.task).toEqual({
-//       id: "123",
-//       title: "Learning Jest",
-//       completed: false,
-//     });
-//   });
-// });
+  it("Returns 404 status on not found task", async () => {
+    const res = await request(app)
+      .put("/api/task/12/title")
+      .send({ title: "Learn CI/CD" });
 
-// describe("GET /api/task/search?completed=true", () => {
-//   it("Returns 404 if no completed task found", async () => {
-//     await request(app).post("/api/task/add").send(mockData);
+    expect(res.statusCode).toBe(404);
+    expect(res.body.message).toBe("No task found to update");
+  });
+});
 
-//     const res = await request(app).get("/api/task/search?completed=false");
-//     expect(res.statusCode).toBe(404);
-//     expect(res.body.message).toBe("No task completed found");
-//   });
+describe("DELETE /api/task/:id", () => {
+  it("Delete existing task and GET follow-up", async () => {
+    await request(app).post("/api/task/add").send({ title: "Learn Docker" });
 
-//   it("Returns completed tasks and success 200", async () => {
-//     await request(app).post("/api/task/add").send(mockData);
-//     await request(app).post("/api/task/add").send({
-//       id: "124",
-//       title: "Learn CI/CD",
-//       completed: true,
-//     });
+    const res = await request(app).delete("/api/task/1");
+    expect(res.statusCode).toBe(200);
+    expect(res.body.message).toBe("Task deleted");
 
-//     const res = await request(app).get("/api/task/search?completed=true");
-//     expect(res.statusCode).toBe(200);
-//     expect(res.body.tasks).toEqual([
-//       { id: "124", title: "Learn CI/CD", completed: true },
-//     ]);
-//   });
-// });
+    const getRes = await request(app).get("/api/task/1");
+    expect(getRes.statusCode).toBe(404);
+    expect(getRes.body.message).toBe("Task not found");
+  });
 
-// describe("PUT /api/task/:id", () => {
-//   it("Update task to true and returns the task", async () => {
-//     await request(app).post("/api/task/add").send(mockData);
+  it("Returns 404 status on not found task", async () => {
+    const res = await request(app).delete("/api/task/126");
+    expect(res.statusCode).toBe(404);
+    expect(res.body.message).toBe("No task found to delete");
+  });
 
-//     const res = await request(app).put("/api/task/123");
-//     expect(res.body.message).toBe("Task updated");
-//     expect(res.statusCode).toBe(200);
+  it("Returns 400 status on invalid id", async () => {
+    const res = await request(app).delete("/api/task/abc");
 
-//     const getRes = await request(app).get("/api/task/123");
-//     expect(getRes.statusCode).toBe(200);
-//     expect(getRes.body).toEqual({
-//       id: "123",
-//       title: "Learn Jest",
-//       completed: true,
-//     });
-//   });
+    expect(res.statusCode).toBe(400);
+    expect(res.body.message).toBe("Invalid data provided");
+  });
+});
 
-//   it("Returns 404 on non-existent id", async () => {
-//     await request(app).post("/api/task/add").send(mockData);
+describe("PUT /api/task/:id/status", () => {
+  it("Returns 400 status on invalid id", async () => {
+    const res = await request(app).put("/api/task/abc/status");
 
-//     const res = await request(app).put("/api/task/1234");
-//     expect(res.body.message).toBe("No task found");
-//     expect(res.statusCode).toBe(404);
-//   });
-// });
+    expect(res.statusCode).toBe(400);
+    expect(res.body.message).toBe("Invalid data provided");
+  });
 
-// describe("DELETE /api/task/:id", () => {
-//   it("Delete existing task and GET follow-up", async () => {
-//     await request(app).post("/api/task/add").send(mockData);
+  it("Returns 404 status on not found task ", async () => {
+    const res = await request(app).put("/api/task/12/status");
 
-//     const res = await request(app).delete("/api/task/123");
-//     expect(res.statusCode).toBe(204);
+    expect(res.statusCode).toBe(404);
+    expect(res.body.message).toBe("No task found to complete");
+  });
 
-//     const getRes = await request(app).get("/api/task/123");
-//     expect(getRes.statusCode).toBe(404);
-//     expect(getRes.body.message).toBe("No task found");
-//   });
+  it("Returns 200 status on TRUE completed task & follow-up GET", async () => {
+    await request(app).post("/api/task/add").send({ title: "Learn Docker" });
 
-//   it("Non-existent task to delete", async () => {
-//     await request(app).post("/api/task/add").send({
-//       id: "125",
-//       title: "Learn Jest",
-//       completed: true,
-//     });
+    const res = await request(app).put("/api/task/1/status");
 
-//     const res = await request(app).delete("/api/task/126");
-//     expect(res.statusCode).toBe(404);
-//     expect(res.body.message).toBe("No task found");
-//   });
-// });
+    expect(res.statusCode).toBe(200);
+    expect(res.body.message).toBe("Task completed");
+
+    const getRes = await request(app).get("/api/task/1");
+
+    expect(getRes.statusCode).toBe(200);
+    expect(getRes.body.task).toEqual({
+      id: 1,
+      title: "Learn Docker",
+      completed: true,
+    });
+  });
+
+  it("Returns 200 status on FALSE completed task & follow-up GET", async () => {
+    await request(app).post("/api/task/add").send({ title: "Learn Docker" });
+    await request(app).put("/api/task/1/status");
+
+    const res = await request(app).put("/api/task/1/status");
+
+    expect(res.statusCode).toBe(200);
+    expect(res.body.message).toBe("Task completed");
+
+    const getRes = await request(app).get("/api/task/1");
+
+    expect(getRes.statusCode).toBe(200);
+    expect(getRes.body.task).toEqual({
+      id: 1,
+      title: "Learn Docker",
+      completed: false,
+    });
+  });
+});
