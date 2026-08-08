@@ -1,7 +1,7 @@
-import jwt from "jsonwebtoken";
-import { hashToken } from "./utils/hashToken.js";
-import { pool } from "../config/database.js";
 import "dotenv/config";
+import jwt from "jsonwebtoken";
+import { pool } from "../config/database.js";
+import { hashToken } from "../utils/hashToken.js";
 
 const authMiddleware = async (req, res, next) => {
   const { accessToken, refreshToken } = req.cookies;
@@ -16,14 +16,14 @@ const authMiddleware = async (req, res, next) => {
     } catch {
       return res
         .status(401)
-        .json({ success: false, message: "Not authorized. Login again." });
+        .json({ success: false, message: "Not authorized, Login again." });
     }
   }
 
   if (!refreshToken) {
     return res.status(401).json({
       success: false,
-      message: "Not Authorized, Login again.",
+      message: "Not authorized, Login again.",
     });
   }
 
