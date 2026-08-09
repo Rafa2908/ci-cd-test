@@ -8,6 +8,6 @@ export const emailValidator = (email) => {
   return regex.email.test(email);
 };
 
-export const passwordValidator = async (password) => {
+export const passwordValidator = (password) => {
   return regex.password.test(password);
 };

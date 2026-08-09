@@ -19,16 +19,10 @@ export const registerUSer = async (req, res, next) => {
       return res.status(400).json({ message: "Please provide a valid email" });
     }
 
-    if (password.length < 8) {
-      return res
-        .status(400)
-        .json({ message: "Password must be at least 8 characters long" });
-    }
-
     if (!passwordValidator(password)) {
       return res.status(400).json({
         message:
-          "Password must have 1 uppercase, 1 lowercase, 1 number, and 1 special character",
+          "Password must be 8 characters long and at least have 1 uppercase, 1 lowercase, 1 number, and 1 special character",
       });
     }
 
@@ -138,7 +132,9 @@ export const loginUser = async (req, res, next) => {
 
   try {
     if (!email || !password) {
-      return res.status(400).json({ message: "No data provided" });
+      return res
+        .status(400)
+        .json({ message: "Please provide credentials to log in" });
     }
 
     if (!emailValidator(email)) {
