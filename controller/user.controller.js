@@ -1,9 +1,9 @@
+import "dotenv/config";
 import { pool } from "../config/database.js";
 import { hashToken } from "../utils/hashToken.js";
 import { emailValidator, passwordValidator } from "../utils/regex.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-import "dotenv/config";
 
 export const registerUSer = async (req, res, next) => {
   const { email, password, confirmPassword } = req.body;
