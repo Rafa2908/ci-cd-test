@@ -54,6 +54,8 @@ jobs:
           TEST_PG_PASSWORD: postgres
           TEST_PG_DB: test_db
           TEST_PG_PORT: 5432
+          JWT_ACCESS_SECRET: dd093849-53ed-4dd1-bde6-0ccef74904f7
+          JWT_REFRESH_SECRET: b7a2090c-2bc1-41fb-aa28-0710997a8131
 
   build-and-push:
     needs: test

@@ -8,12 +8,16 @@ import {
   updateTaskStatus,
   updateTaskTitle,
 } from "../controller/task.controller.js";
+import authMiddleware from "../middleware/auth.middleware.js";
 
 export const taskRouter = Router();
 
-taskRouter.route("/add").post(addTask);
-taskRouter.route("/tasks").get(getTasks);
-taskRouter.route("/search").get(getTasksCompleted);
-taskRouter.route("/:id").get(getTaskById).delete(deleteTaskById);
-taskRouter.route("/:id/title").put(updateTaskTitle);
-taskRouter.route("/:id/status").put(updateTaskStatus);
+taskRouter.route("/add").post(authMiddleware, addTask);
+taskRouter.route("/tasks").get(authMiddleware, getTasks);
+taskRouter.route("/search").get(authMiddleware, getTasksCompleted);
+taskRouter
+  .route("/:id")
+  .get(authMiddleware, getTaskById)
+  .delete(authMiddleware, deleteTaskById);
+taskRouter.route("/:id/title").put(authMiddleware, updateTaskTitle);
+taskRouter.route("/:id/status").put(authMiddleware, updateTaskStatus);
