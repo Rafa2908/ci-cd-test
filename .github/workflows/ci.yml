@@ -78,3 +78,5 @@ jobs:
           context: .
           push: true
           tags: ${{secrets.DOCKERHUB_USERNAME}}/ci-cd-demo:latest
+      - name: Trigger Render deploy
+        run: curl -X POST ${{ secrets.RENDER_DEPLOY_HOOK }}
